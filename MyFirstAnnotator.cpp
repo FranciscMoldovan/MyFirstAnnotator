@@ -112,6 +112,10 @@ private:
   double pointSize;
   float test_param;
   std::vector<iai_rs::Cluster> clusters;
+  int crtCluster=-1;
+
+  //experimental
+  std::vector<pcl::PointCloud<PointT>::Ptr>clustersVector;
 
   /**
    * Arrays of Global Descriptors:
@@ -293,7 +297,7 @@ public:
   }
 
 
-  void calcESF()
+  void extractClusters()
   {
       //iterate over clusters
       for(size_t i = 0; i < clusters.size(); ++i)
@@ -311,18 +315,25 @@ public:
         ei.setIndices(indices);
         ei.filter(*cluster_cloud);
 
-        //st/////////////////////////
-        //4.Object for storing the ESF descriptor
-        pcl::PointCloud<pcl::ESFSignature640>::Ptr descriptor(new pcl::PointCloud<pcl::ESFSignature640>);
-
-        //5.ESF estimation object
-        pcl::ESFEstimation<pcl::PointXYZRGBA, pcl::ESFSignature640>esf;
-        /////////////////////////////
-        esf.setInputCloud(cluster_cloud);
-        esf.compute(*descriptor);
-        if(descriptor->points.size()==1)
-           descVectESF.push_back(descriptor->points[0]);
+        clustersVector.push_back(cluster_cloud);
       }
+
+  }
+
+
+  void calcESF()
+  {
+    extractClusters();
+    for (int var = 0; var < clustersVector.size(); ++var)
+    {
+      pcl::PointCloud<pcl::ESFSignature640>::Ptr descriptor(new pcl::PointCloud<pcl::ESFSignature640>);
+      //5.ESF estimation object
+      pcl::ESFEstimation<pcl::PointXYZRGBA, pcl::ESFSignature640>esf;
+      esf.setInputCloud(clustersVector.at(var));
+      esf.compute(*descriptor);
+      if(descriptor->points.size()==1)
+      descVectESF.push_back(descriptor->points[0]);
+    }
   }
 
   void calcVFH()
@@ -1173,9 +1184,9 @@ public:
     // Global Descriptors:
 
     ///1.ESF
-//    descVectESF.clear();
-//    calcESF();
-//    drawHistograms(descVectESF, "Ensemble of Shape Functions (ESF)");
+    descVectESF.clear();
+    calcESF();
+    drawHistograms(descVectESF, "Ensemble of Shape Functions (ESF)");
     ///////
 
     ///2.VFH
@@ -1260,7 +1271,7 @@ public:
   }
   void drawImageWithLock(cv::Mat &disp)
   {
-     //disp=hists.clone();
+     disp=hists.clone();
   }
 
   void fillVisualizerWithLock(pcl::visualization::PCLVisualizer &visualizer, const bool firstRun)
