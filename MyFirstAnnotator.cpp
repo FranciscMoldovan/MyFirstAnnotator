@@ -76,8 +76,6 @@
 #include<pcl/visualization/range_image_visualizer.h>
 
 
-#define TESTINGM
-
 
 typedef pcl::PointXYZRGBA PointT;
 // A handy typedef.
@@ -544,104 +542,32 @@ void calcPFH()
   }
 }
 
-
-//  void calcFPFH()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-
-//         ///testing:
-//  #ifdef TESTING
-
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud_piece(new pcl::PointCloud<PointT>());
-
-//         int nrTestPoints=0;
-
-//         if (cluster_cloud->size()<100)
-//            nrTestPoints=cluster_cloud->size();
-//         else
-//            nrTestPoints=100;
-
-//         for (int var = 0; var < nrTestPoints; ++var)
-//         {
-//            cluster_cloud_piece->points.push_back(cluster_cloud->points.at(i));
-//         }
-
-//         outInfo("asdasdas");
-
-//         /// ......///////
-
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals_piece(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the FPFH descriptors for each point.
-//         pcl::PointCloud<pcl::FPFHSignature33>::Ptr descriptors(new pcl::PointCloud<pcl::FPFHSignature33>());
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT, pcl::Normal>normalEstimationTest;
-//         normalEstimationTest.setInputCloud(cluster_cloud_piece);
-//         normalEstimationTest.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimationTest.setSearchMethod(kdtree);
-//         normalEstimationTest.compute(*normals_piece);
-
-//         //FPFH estimation object.
-//         pcl::FPFHEstimation<PointT,pcl::Normal,pcl::FPFHSignature33>fpfh;
-//         fpfh.setInputCloud(cluster_cloud_piece);
-//         fpfh.setInputNormals(normals_piece);
-//         fpfh.setSearchMethod(kdtree);
-//         //Search radius, to look for neighbours. Note: the value given here has to be
-//         //larger thatn the radius used to estimate the normals.
-//         fpfh.setRadiusSearch(0.05);
-//         fpfh.compute(*descriptors);
-
-//#endif
-
-//#ifndef TESTING
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the FPFH descriptors for each point.
-//         pcl::PointCloud<pcl::FPFHSignature33>::Ptr descriptors(new pcl::PointCloud<pcl::FPFHSignature33>());
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT, pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //FPFH estimation object.
-//         pcl::FPFHEstimation<PointT,pcl::Normal,pcl::FPFHSignature33>fpfh;
-//         fpfh.setInputCloud(cluster_cloud);
-//         fpfh.setInputNormals(normals);
-//         fpfh.setSearchMethod(kdtree);
-//         //Search radius, to look for neighbours. Note: the value given here has to be
-//         //larger thatn the radius used to estimate the normals.
-//         fpfh.setRadiusSearch(0.05);
-//         fpfh.compute(*descriptors);
-//         outInfo("asdasdas");
-//#endif
-
-
-//      }
-//  }
+/**
+ * @brief calcFPFH
+ * Function that calculates PFH(Fast Point Feature Histogram)
+ * ~~Local Descriptor~~
+ */
+void calcFPFH()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the FPFH descriptors for each point.
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr descriptors(new pcl::PointCloud<pcl::FPFHSignature33>());
+    // Note: you would usually perform downsampling now. It has been omitted here
+    // for simplicity, but be aware that computation can take a long time.
+    normals=computeNormals(extractedClusters.at(i));
+    //FPFH estimation object.
+    pcl::FPFHEstimation<PointT,pcl::Normal,pcl::FPFHSignature33>fpfh;
+    fpfh.setInputCloud(extractedClusters.at(i));
+    fpfh.setInputNormals(normals);
+    fpfh.setSearchMethod(kdtree);
+    //Search radius, to look for neighbours. Note: the value given here has to be
+    //larger thatn the radius used to estimate the normals.
+    fpfh.setRadiusSearch(0.05);
+    fpfh.compute(*descriptors);
+  }
+}
 
 
 //  //NO RSD, SORRY
@@ -1112,8 +1038,10 @@ void calcPFH()
     //calcPFH();
     /////////////
 
+      //TESTED-OK
     //2.FPFH
     //calcFPFH();
+    /////////////
 
     //3.RSD
     //calcRSD();
