@@ -304,7 +304,6 @@ void calcESF()
     pcl::ESFEstimation<pcl::PointXYZRGBA, pcl::ESFSignature640>esf;
     esf.setInputCloud(extractedClusters.at(i));
     esf.compute(*descriptor);
-    if(descriptor->points.size()==1)
       descVectESF.push_back(descriptor->points[0]);
   }
 }
@@ -351,7 +350,6 @@ void calcVFH()
     // the centroid and any of the cluster's points.
     vfh.setNormalizeDistance(false);
     vfh.compute(*descriptor);
-    if(descriptor->points.size()==1)
       descVectVFH.push_back(descriptor->points[0]);
   }
 }
@@ -392,56 +390,42 @@ void calcCVFH()
 }
 
 
-//  void calcOUR_CVFH()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
 
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the OUR-CVFH descriptor.
-//         pcl::PointCloud<pcl::VFHSignature308>::Ptr descriptors(new pcl::PointCloud<pcl::VFHSignature308>);
+//******//DOES NOT WORK
+//******/**
+//****** * @brief calcOUR_CVFH
+//****** * Function that calculates OUR-CVFH (Oriented, Unique and Repeatable CVFH)
+//****** * ~~Global Descriptor~~
+//****** */
+//******void calcOUR_CVFH()
+//******{
+//******  extractedClusters=extractClusters();
+//******  for (int i = 0; i < extractedClusters.size(); ++i)
+//******  {
+//******    //Object for storing the OUR-CVFH descriptor.
+//******    pcl::PointCloud<pcl::VFHSignature308>::Ptr descriptors(new pcl::PointCloud<pcl::VFHSignature308>);
+//******    //Note: you should have performed preprocessing to cluster out the object
+//******    //from the cloud, and save to an individual file
+//******    //compute normals:
+//******    normals=computeNormals(extractedClusters.at(i));
+//******    //OUR-CVFH estimation object.
+//******    pcl::OURCVFHEstimation<PointT, pcl::Normal, pcl::VFHSignature308>ourcvfh;
+//******    ourcvfh.setInputCloud(extractedClusters.at(i));
+//******    ourcvfh.setInputNormals(normals);
+//******    ourcvfh.setSearchMethod(kdtree);
+//******    ourcvfh.setEPSAngleThreshold(5.0/180*M_PI);//5 deg
+//******    ourcvfh.setCurvatureThreshold(1.0);
+//******    ourcvfh.setNormalizeBins(false);
+//******    //Set the minimum axis ratio between the SGURF axes. At the disambiguation phase,
+//******    //this will decide if additional Reference Frames need to be created, id ambiguous.
+//******    ourcvfh.setAxisRatio(0.8);
+//******    ourcvfh.compute(*descriptors);
+//******
+//******      descVectOUR_CVFH.push_back(descriptors->points[0]);
+//******  }
+//******}
 
-//         //Note: you should have performed preprocessing to cluster out the object
-//         //from the cloud, and save to an individual file
 
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT, pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //OUR-CVFH estimation object.
-//         //pcl::OURCVFHEstimation<PointT, pcl::Normal, pcl::VFHSignature308>ourcvfh;
-//         //ourcvfh.setInputCloud(cluster_cloud);
-//         //ourcvfh.setInputNormals(normals);
-//         //ourcvfh.setSearchMethod(kdtree);
-//         //ourcvfh.setEPSAngleThreshold(5.0/180*M_PI);//5 deg
-//         //ourcvfh.setCurvatureThreshold(1.0);
-//         //ourcvfh.setNormalizeBins(false);
-//         //Set the minimum axis ratio between the SGURF axes. At the disambiguation phase,
-//         //this will decide if additional Reference Frames need to be created, id ambiguous.
-//         //ourcvfh.setAxisRatio(0.8);
-//        // ourcvfh.compute(*descriptors);
-//        //     //if(descriptors->points.size()==1)
-//        //     descVectOUR_CVFH.push_back(descriptors->points[0]);
-//      }
-//  }
 
 //  void calcGFPFH()
 //  {
@@ -1139,9 +1123,9 @@ void calcCVFH()
     ////////
 
     ///4.OUR-CVFH
-    //descVectOUR_CVFH.clear();
-    //calcOUR_CVFH();
-    //drawHistograms(descVectOUR_CVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
+    descVectOUR_CVFH.clear();
+    calcOUR_CVFH();
+    drawHistograms(descVectOUR_CVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
     ////////
 
     ///5.OUR-CVFH
