@@ -250,8 +250,8 @@ public:
          float pastEntryHeight;
          heightOfEntry=hist_h*(descVect.at(i).histogram[j])/maxHist;
          pastEntryHeight=hist_h*(descVect.at(i).histogram[j-1]/maxHist);
-         line(histImage, Point(10+((histWidthPixels)/nbOfEntries)*1.25*j, hist_h-heightOfEntry+40),
-                         Point(10+((histWidthPixels)/nbOfEntries)*1.25*(j-1), hist_h-pastEntryHeight+40),
+         line(histImage, Point(10+((histWidthPixels)/nbOfEntries)*j, hist_h-heightOfEntry+40),
+                         Point(10+((histWidthPixels)/nbOfEntries)*(j-1), hist_h-pastEntryHeight+40),
                          colors[i % nbOfColors], 1, 8, 0);
        }
      }
@@ -364,7 +364,7 @@ void calcCVFH()
   extractedClusters=extractClusters();
   //Object for storing the VFH descriptor
   pcl::PointCloud<pcl::VFHSignature308>::Ptr descriptor(new pcl::PointCloud<pcl::VFHSignature308>);
-  for (int i = 0; i < extractedClusters.size(); ++i)
+  for(int i = 0; i < extractedClusters.size(); ++i)
   {
     //compute normals
     normals=computeNormals(extractedClusters.at(i));
@@ -426,76 +426,55 @@ void calcCVFH()
 //******}
 
 
+/**
+ * @brief calcGFPFH
+ * Function that calculates GFPFH (Global Fast Point Feature Histogram)
+ * ~~Global Descriptor~~
+ */
+void calcGFPFH()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the GFPFH descriptor.
+    pcl::PointCloud<pcl::GFPFHSignature16>::Ptr descriptor(new pcl::PointCloud<pcl::GFPFHSignature16>);
+    //Note: you should have performed preprocessing to cluster out the object
+    //from the cloud, and save it to an individual file.
 
-//  void calcGFPFH()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
+    //save each cluster to PCD, so it can be converted to XYZL
+    saveToPCD(extractedClusters.at(i));
+    // Cloud for storing the object.
+    pcl::PointCloud<pcl::PointXYZL>::Ptr object(new pcl::PointCloud<pcl::PointXYZL>);
+    // Note: you should now perform classification on the cloud's points. See the
+    // original paper for more details. For this example, we will now consider 4
+    // different classes, and randomly label each point as one of them.
 
-//         //Object for storing the GFPFH descriptor.
-//         pcl::PointCloud<pcl::GFPFHSignature16>::Ptr descriptor(new pcl::PointCloud<pcl::GFPFHSignature16>);
+    // Read a PCD file from disk.
+    if(pcl::io::loadPCDFile<pcl::PointXYZL>("my_cluster.pcd", *object) != 0)
+    {
+        outInfo("READ ERROR!!!!");
+    } else
+        outInfo("OK READ OK!!!!");
 
-//         //Note: you should have performed preprocessing to cluster out the object
-//         //from the cloud, and save it to an individual file.
-
-//         //save each cluster to PCD, so it can be converted to XYZL
-//         saveToPCD(cluster_cloud);
-
-//         // Cloud for storing the object.
-//         pcl::PointCloud<pcl::PointXYZL>::Ptr object(new pcl::PointCloud<pcl::PointXYZL>);
-
-
-//         // Note: you should now perform classification on the cloud's points. See the
-//         // original paper for more details. For this example, we will now consider 4
-//         // different classes, and randomly label each point as one of them.
-
-//         // Read a PCD file from disk.
-//         if (pcl::io::loadPCDFile<pcl::PointXYZL>("my_cluster.pcd", *object) != 0)
-//         {
-//             outInfo("READ ERROR!!!!");
-//             //return -1;
-//         } else
-//             outInfo("OK READ OK!!!!");
-
-//         for (int var = 0; var < object->points.size(); ++var)
-//         {
-//            object->points[i].label = 1+i%4;
-//         }
-
-//         //ESF estimation object;
-//         pcl::GFPFHEstimation<pcl::PointXYZL,pcl::PointXYZL,pcl::GFPFHSignature16>gfpfh;
-//         gfpfh.setInputCloud(object);
-
-//         //Set the object that contains the labels for each point. Thanks to the
-//         //PointXYZL type, we can use the same object we store the cloud in.
-//         gfpfh.setInputLabels(object);
-//         //Set the size of the octree leaves to 1cm(cubic)
-//         gfpfh.setOctreeLeafSize(0.01);
-//         //Set the number of classes the cloud has been labeled with
-//         //(default is 16)
-//         gfpfh.setNumberOfClasses(4);
-
-//         gfpfh.compute(*descriptor);
-
-
-//         descVectGFPFH.push_back(descriptor->points[0]);
-
-//      }
-
-//  }
+    for(int var = 0; var < object->points.size(); ++var)
+    {
+       object->points[i].label = 1+i%4;
+    }
+    //ESF estimation object;
+    pcl::GFPFHEstimation<pcl::PointXYZL,pcl::PointXYZL,pcl::GFPFHSignature16>gfpfh;
+    gfpfh.setInputCloud(object);
+    //Set the object that contains the labels for each point. Thanks to the
+    //PointXYZL type, we can use the same object we store the cloud in.
+    gfpfh.setInputLabels(object);
+    //Set the size of the octree leaves to 1cm(cubic)
+    gfpfh.setOctreeLeafSize(0.01);
+    //Set the number of classes the cloud has been labeled with
+    //(default is 16)
+    gfpfh.setNumberOfClasses(4);
+    gfpfh.compute(*descriptor);
+      descVectGFPFH.push_back(descriptor->points[0]);
+  }
+}
 
 
 //  void calcGRSD()
@@ -1122,19 +1101,15 @@ void calcCVFH()
     //drawHistograms(descVectCVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
     ////////
 
+      //tested-NOT OK
     ///4.OUR-CVFH
-    descVectOUR_CVFH.clear();
-    calcOUR_CVFH();
-    drawHistograms(descVectOUR_CVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
-    ////////
-
-    ///5.OUR-CVFH
     //descVectOUR_CVFH.clear();
     //calcOUR_CVFH();
     //drawHistograms(descVectOUR_CVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
     ////////
 
-    //highly inefficient implementation, haha
+      //tested-OK
+      //highly inefficient implementation, haha
     ///6.GFPFH
     //descVectGFPFH.clear();
     //calcGFPFH();
@@ -1145,8 +1120,8 @@ void calcCVFH()
     // Local Descriptors:
 
     //1.PFH
-//    descVectPFH.clear();//not even used!
-//    calcPFH();
+    //descVectPFH.clear();//not even used!
+    //calcPFH();
     ////////////////////////////////////
 
     //2.FPFH
