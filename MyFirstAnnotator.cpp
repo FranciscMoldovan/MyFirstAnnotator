@@ -298,14 +298,14 @@ void calcESF()
   extractedClusters=extractClusters();
   for (int i = 0; i < extractedClusters.size(); ++i)
   {
-    //descriptor-one for each point cloud
+    //Object for storing the ESF descriptor
     pcl::PointCloud<pcl::ESFSignature640>::Ptr descriptor(new pcl::PointCloud<pcl::ESFSignature640>);
-    //5.ESF estimation object
+    //ESF estimation object
     pcl::ESFEstimation<pcl::PointXYZRGBA, pcl::ESFSignature640>esf;
     esf.setInputCloud(extractedClusters.at(i));
     esf.compute(*descriptor);
     if(descriptor->points.size()==1)
-    descVectESF.push_back(descriptor->points[0]);
+      descVectESF.push_back(descriptor->points[0]);
   }
 }
 
@@ -327,16 +327,15 @@ pcl::PointCloud<pcl::Normal>::Ptr computeNormals(pcl::PointCloud<PointT>::Ptr &i
 
 /**
  * @brief calcVFH
- * Function that calculates VFH (Viewpoint Feature Histogram)
+ *Function that calculates VFH (Viewpoint Feature Histogram)
  *~~Global Descriptor~~
  */
 void calcVFH()
 {
   extractedClusters=extractClusters();
-
-  //4.Object for storing the VFH descriptor
+  //Object for storing the VFH descriptor
   pcl::PointCloud<pcl::VFHSignature308>::Ptr descriptor(new pcl::PointCloud<pcl::VFHSignature308>);
-  for (int i = 0; i < extractedClusters.size(); ++i)
+  for(int i = 0; i < extractedClusters.size(); ++i)
   {
     //compute normals
     normals=computeNormals(extractedClusters.at(i));
@@ -357,65 +356,41 @@ void calcVFH()
   }
 }
 
+/**
+ * @brief calcCVFH
+ *Function that calculates CVFH (Clustered Viewpoint Feature Histogram)
+ *~~Global Descriptor~~
+ */
+void calcCVFH()
+{
+  extractedClusters=extractClusters();
+  //Object for storing the VFH descriptor
+  pcl::PointCloud<pcl::VFHSignature308>::Ptr descriptor(new pcl::PointCloud<pcl::VFHSignature308>);
+  for (int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //compute normals
+    normals=computeNormals(extractedClusters.at(i));
+    //CVFH estimation object.
+    pcl::CVFHEstimation<PointT, pcl::Normal, pcl::VFHSignature308> cvfh;
+    cvfh.setInputCloud(extractedClusters.at(i));
+    cvfh.setInputNormals(normals);
+    cvfh.setSearchMethod(kdtree);
+    //set maximum allowable derivation of the normals,
+    //for the region segmentation step.
+    cvfh.setEPSAngleThreshold(5.0/180.0*M_PI);//5 deg
+    //Set the curvature threshol (maximum disparity between curvatures),
+    //for the region segmentation step.
+    cvfh.setCurvatureThreshold(1.0);
+    //Set to true to normalize the bins of the resulting hist,
+    //using the total number of points. Note:enabling it will make
+    //CVFH invariant to scale, just like VFH, but the authors encourage
+    //the opposite.
+    cvfh.setNormalizeBins(false);
+    cvfh.compute(*descriptor);
+      descVectCVFH.push_back(descriptor->points[0]);
+  }
+}
 
-//  void calcCVFH()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//        iai_rs::Cluster &cluster = clusters[i];
-//        if(!cluster.points.has())
-//        {
-//          continue;
-//        }
-//        pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//        iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//        pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//        pcl::ExtractIndices<PointT> ei;
-//        ei.setInputCloud(cloud_ptr);
-//        ei.setIndices(indices);
-//        ei.filter(*cluster_cloud);
-
-//        //Object for storing the normals.
-//        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//        //Object for storing the CVFH descriptors.
-//        pcl::PointCloud<pcl::VFHSignature308>::Ptr descriptors(new pcl::PointCloud<pcl::VFHSignature308>);
-
-//        //Estimate the normals.
-//        pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//        normalEstimation.setInputCloud(cluster_cloud);
-//        normalEstimation.setRadiusSearch(0.03);
-//        pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//        normalEstimation.setSearchMethod(kdtree);
-//        normalEstimation.compute(*normals);
-
-//        //CVFH estimation object.
-//        pcl::CVFHEstimation<PointT, pcl::Normal, pcl::VFHSignature308> cvfh;
-//        cvfh.setInputCloud(cluster_cloud);
-//        cvfh.setInputNormals(normals);
-//        cvfh.setSearchMethod(kdtree);
-
-//        //set maximum allowable derivation of the normals,
-//        //for the region segmentation step.
-//        cvfh.setEPSAngleThreshold(5.0/180.0*M_PI);//5 deg
-//        //Set the curvature threshol (maximum disparity between curvatures),
-//        //for the region segmentation step.
-//        cvfh.setCurvatureThreshold(1.0);
-//        //Set to true to normalize the bins of the resulting hist,
-//        //using the total number of points. Note:enabling it will make
-//        //CVFH invariant to scale, just like VFH, but the authors encourage
-//        //the opposite.
-//        cvfh.setNormalizeBins(false);
-
-
-//        cvfh.compute(*descriptors);
-//        //if(descriptors->points.size()==1)
-//           descVectCVFH.push_back(descriptors->points[0]);
-
-
-
-//      }
-//  }
 
 //  void calcOUR_CVFH()
 //  {
@@ -1142,20 +1117,21 @@ void calcVFH()
     outInfo("Number of clusters:" << clusters.size());
     // Global Descriptors:
 
-      //tested-OK -> 10 histograms
+      //tested-OK
     ///1.ESF
     //descVectESF.clear();
     //calcESF();
     //drawHistograms(descVectESF, "Ensemble of Shape Functions (ESF)");
     ///////
 
-      //tested-OK -> 4 histograms
+      //tested-OK
     ///2.VFH
     //descVectVFH.clear();
     //calcVFH();
     //drawHistograms(descVectVFH, "Viewpoint Feature Histogram (VFH)");
     ////////
 
+      //tested-OK
     ///3.CVFH
     //descVectCVFH.clear();
     //calcCVFH();
