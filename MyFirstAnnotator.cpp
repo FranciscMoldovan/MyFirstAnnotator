@@ -565,7 +565,7 @@ void calcFPFH()
     //Search radius, to look for neighbours. Note: the value given here has to be
     //larger thatn the radius used to estimate the normals.
     fpfh.setRadiusSearch(0.05);
-    fpfh.compute(*descriptors);
+      fpfh.compute(*descriptors);
   }
 }
 
@@ -618,58 +618,36 @@ void calcFPFH()
 //  }
 
 
-//  void calc3DSC()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the 3DSC descriptors for each point.
-//         pcl::PointCloud<pcl::ShapeContext1980>::Ptr descriptors(new pcl::PointCloud<pcl::ShapeContext1980>());
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-
-//         //3DSC estmation object.
-//         pcl::ShapeContext3DEstimation<PointT,pcl::Normal,pcl::ShapeContext1980>sc3d;
-//         sc3d.setInputCloud(cluster_cloud);
-//         sc3d.setInputNormals(normals);
-//         sc3d.setSearchMethod(kdtree);
-//         //Search radius, to look for neighbours. It will also be the radius of the
-//         //support shphere
-//         sc3d.setRadiusSearch(0.05);
-//         //The minimal radius value for each sphere, to avoid being too sensitive
-//         //in bins close to the sphere center.
-//         sc3d.setMinimalRadius(0.05/10.0);
-//         //Radius used to compute the local point density for the neighbours
-//         //(the density is the number of points within that radius).
-//         sc3d.setPointDensityRadius(0.05/5.0);
-//         sc3d.compute(*descriptors);
-//      }
-//  }
+/**
+ * @brief calc3DSC
+ * Function that calculates 3DSC (3D Shape Context)
+ * ~~Local Descriptor~~
+ */
+void calc3DSC()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the 3DSC descriptors for each point.
+    pcl::PointCloud<pcl::ShapeContext1980>::Ptr descriptors(new pcl::PointCloud<pcl::ShapeContext1980>());
+    normals=computeNormals(extractedClusters.at(i));
+    //3DSC estmation object.
+    pcl::ShapeContext3DEstimation<PointT,pcl::Normal,pcl::ShapeContext1980>sc3d;
+    sc3d.setInputCloud(extractedClusters.at(i));
+    sc3d.setInputNormals(normals);
+    sc3d.setSearchMethod(kdtree);
+    //Search radius, to look for neighbours. It will also be the radius of the
+    //support shphere
+    sc3d.setRadiusSearch(0.05);
+    //The minimal radius value for each sphere, to avoid being too sensitive
+    //in bins close to the sphere center.
+    sc3d.setMinimalRadius(0.05/10.0);
+    //Radius used to compute the local point density for the neighbours
+    //(the density is the number of points within that radius).
+    sc3d.setPointDensityRadius(0.05/5.0);
+      sc3d.compute(*descriptors);
+  }
+}
 
 
 //  /**
@@ -1025,7 +1003,7 @@ void calcFPFH()
     //drawHistograms(descVectGFPFH, "Global Fast Point Feature Histogram (GFPFH)");
     ////////
 
-      //TESTED-NOT YET..
+      //NOT TESTED-NOT AVAILABLE
     //6.GRSD - Can't try it yet.
 
    /************************
@@ -1044,9 +1022,12 @@ void calcFPFH()
     //calcFPFH();
     /////////////
 
+     //NOT TESTED-NOT AVAILABLE
     //3.RSD
     //calcRSD();
+    ///////////////
 
+     //TESTED-OK
     //4.3DSC
     //calc3DSC();
     ///////////
