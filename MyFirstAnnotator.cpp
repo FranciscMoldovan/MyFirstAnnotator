@@ -512,59 +512,37 @@ void calcGFPFH()
 //*******        //GRSDSignature21
 //*******        // GRSD estimation object.
 //*******            //GRSDEstimation<PointXYZ, Normal, GRSDSignature21> grsd;
-
 //      }
 //  }
 
-//  void calcPFH()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the PFH descriptors for each point.
-//         pcl::PointCloud<pcl::PFHSignature125>::Ptr descriptors(new pcl::PointCloud<pcl::PFHSignature125>());
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //PFH estimation object.
-//         pcl::PFHEstimation<PointT,pcl::Normal,pcl::PFHSignature125>pfh;
-//         pfh.setInputCloud(cluster_cloud);
-//         pfh.setInputNormals(normals);
-//         pfh.setSearchMethod(kdtree);
-//         //Search radius, to look for neighbours. Note: the value given here has
-//         //to be larger than the radius used to estimate the normals.
-//         pfh.setRadiusSearch(0.05);
-
-//         pfh.compute(*descriptors);
-//         outInfo("asdasdas");
-
-
-//      }
-//  }
+/**
+ * @brief calcPFH
+ * Function that calculates PFH(Point Feature Histogram)
+ * ~~Local Descriptor~~
+ */
+void calcPFH()
+{
+    extractedClusters=extractClusters();
+    for(int i = 0; i < extractedClusters.size(); ++i)
+    {
+    //Object for storing the normals.
+    pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+    //Object for storing the PFH descriptors for each point.
+    pcl::PointCloud<pcl::PFHSignature125>::Ptr descriptors(new pcl::PointCloud<pcl::PFHSignature125>());
+    // Note: you would usually perform downsampling now. It has been omitted here
+    // for simplicity, but be aware that computation can take a long time.
+    normals=computeNormals(extractedClusters.at(i));
+    //PFH estimation object.
+    pcl::PFHEstimation<PointT,pcl::Normal,pcl::PFHSignature125>pfh;
+    pfh.setInputCloud(extractedClusters.at(i));
+    pfh.setInputNormals(normals);
+    pfh.setSearchMethod(kdtree);
+    //Search radius, to look for neighbours. Note: the value given here has
+    //to be larger than the radius used to estimate the normals.
+    pfh.setRadiusSearch(0.05);
+      pfh.compute(*descriptors);
+  }
+}
 
 
 //  void calcFPFH()
@@ -1078,51 +1056,61 @@ void calcGFPFH()
     //2.filter out clusters into array
     scene.identifiables.filter(clusters);
     outInfo("Number of clusters:" << clusters.size());
-    // Global Descriptors:
 
-      //tested-OK
+    /************************
+    *                       *
+    *  GLOBAL DESCRIPTORS   *
+    *                       *
+    * ***********************/
+      //TESTED-OK
     ///1.ESF
     //descVectESF.clear();
     //calcESF();
     //drawHistograms(descVectESF, "Ensemble of Shape Functions (ESF)");
     ///////
 
-      //tested-OK
+      //TESTED-OK
     ///2.VFH
     //descVectVFH.clear();
     //calcVFH();
     //drawHistograms(descVectVFH, "Viewpoint Feature Histogram (VFH)");
     ////////
 
-      //tested-OK
+      //TESTED-OK
     ///3.CVFH
     //descVectCVFH.clear();
     //calcCVFH();
     //drawHistograms(descVectCVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
     ////////
 
-      //tested-NOT OK
+      //TESTED-NOT OK
     ///4.OUR-CVFH
     //descVectOUR_CVFH.clear();
     //calcOUR_CVFH();
     //drawHistograms(descVectOUR_CVFH, "Clustered Viewpoint Feature Histogram (CVFH)");
     ////////
 
-      //tested-OK
+      //TESTED-OK
       //highly inefficient implementation, haha
-    ///6.GFPFH
+    ///5.GFPFH
     //descVectGFPFH.clear();
     //calcGFPFH();
     //drawHistograms(descVectGFPFH, "Global Fast Point Feature Histogram (GFPFH)");
     ////////
 
+      //TESTED-NOT YET..
+    //6.GRSD - Can't try it yet.
 
-    // Local Descriptors:
+   /************************
+   *                       *
+   *   LOCAL DESCRIPTORS   *
+   *                       *
+   * ***********************/
 
+      //TESTED-OK
     //1.PFH
-    //descVectPFH.clear();//not even used!
     //calcPFH();
-    ////////////////////////////////////
+    /////////////
 
     //2.FPFH
     //calcFPFH();
