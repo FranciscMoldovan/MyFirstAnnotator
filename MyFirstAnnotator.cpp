@@ -476,42 +476,42 @@ void calcGFPFH()
   }
 }
 
-
-//  void calcGRSD()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the GRSD descriptors for each point.
-//         pcl::PointCloud<pcl::GRSDSignature21>::Ptr descriptors(new pcl::PointCloud<pcl::GRSDSignature21>());
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //GRSD estimation object.
-//         //GRSDSignature21
-//         // GRSD estimation object.
-//             //GRSDEstimation<PointXYZ, Normal, GRSDSignature21> grsd;
+//DOES NOT EXIST IN MY VERSION OF PCL
+//******* void calcGRSD()
+//******* {
+//*******     //iterate over clusters
+//*******     for(size_t i = 0; i < clusters.size(); ++i)
+//*******     {
+//*******        iai_rs::Cluster &cluster = clusters[i];
+//*******        if(!cluster.points.has())
+//*******        {
+//*******          continue;
+//*******        }
+//*******        pcl::PointIndicesPtr indices(new pcl::PointIndices());
+//*******        iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
+//*******        pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
+//*******        pcl::ExtractIndices<PointT> ei;
+//*******        ei.setInputCloud(cloud_ptr);
+//*******        ei.setIndices(indices);
+//*******        ei.filter(*cluster_cloud);
+//*******
+//*******        //Object for storing the normals.
+//*******        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+//*******        //Object for storing the GRSD descriptors for each point.
+//*******        pcl::PointCloud<pcl::GRSDSignature21>::Ptr descriptors(new pcl::PointCloud<pcl::GRSDSignature21>());
+//*******
+//*******        //Estimate the normals.
+//*******        pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
+//*******        normalEstimation.setInputCloud(cluster_cloud);
+//*******        normalEstimation.setRadiusSearch(0.03);
+//*******        pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
+//*******        normalEstimation.setSearchMethod(kdtree);
+//*******        normalEstimation.compute(*normals);
+//*******
+//*******        //GRSD estimation object.
+//*******        //GRSDSignature21
+//*******        // GRSD estimation object.
+//*******            //GRSDEstimation<PointXYZ, Normal, GRSDSignature21> grsd;
 
 //      }
 //  }
