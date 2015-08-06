@@ -704,7 +704,7 @@ void calc3DSC()
 
 /**
  * @brief calcSHOT
- * Function that calculates 3DSC (3D Shape Context)
+ * Function that calculates SHOT (Signature of Histograms of Orientations)
  * ~~Local Descriptor~~
  */
 void calcSHOT()
@@ -729,56 +729,35 @@ void calcSHOT()
   }
 }
 
-
-//  void calcSI()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the Spin Image for each point.
-//         pcl::PointCloud<SpinImage>::Ptr descriptors(new pcl::PointCloud<SpinImage>());
-
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //Spin Image estimation object.
-//         pcl::SpinImageEstimation<PointT,pcl::Normal,SpinImage>si;
-//         si.setInputCloud(cluster_cloud);
-//         si.setInputNormals(normals);
-//         //Radius of the support cylinder.
-//         si.setRadiusSearch(0.02);
-//         //Set the resolution of the spin image
-//         //(the number of bins along one dimension).
-//         //Note:you must change the output histogram size to reflect this.
-//         si.setImageWidth(8);
-//         si.compute(*descriptors);
-
-//      }
-//  }
+/**
+ * @brief calcSI
+ * Function that calculates SI (Spin image)
+ * ~~Local Descriptor~~
+ */
+void calcSI()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the Spin Image for each point.
+    pcl::PointCloud<SpinImage>::Ptr descriptors(new pcl::PointCloud<SpinImage>());
+    // Note: you would usually perform downsampling now. It has been omitted here
+    // for simplicity, but be aware that computation can take a long time.
+    //Estimate the normals.
+    normals=computeNormals(extractedClusters.at(i));
+    //Spin Image estimation object.
+    pcl::SpinImageEstimation<PointT,pcl::Normal,SpinImage>si;
+    si.setInputCloud(extractedClusters.at(i));
+    si.setInputNormals(normals);
+    //Radius of the support cylinder.
+    si.setRadiusSearch(0.02);
+    //Set the resolution of the spin image
+    //(the number of bins along one dimension).
+    //Note:you must change the output histogram size to reflect this.
+    si.setImageWidth(8);
+    si.compute(*descriptors);
+  }
+}
 
 
 //  void calcRIFT()
@@ -1020,12 +999,14 @@ void calcSHOT()
     //calcUSC();
     /////////
 
+      //TESTED-OK
     //6.SHOT
-    calcSHOT();
+    //calcSHOT();
     ////////
 
+      //TESTED-OK
     //7.SI
-    //calcSI();
+    calcSI();
     ////////
 
     //works
