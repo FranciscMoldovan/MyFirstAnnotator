@@ -702,50 +702,32 @@ void calc3DSC()
 //  }
 
 
-//  void calcSHOT()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the SHOT descriptors for each point.
-//         pcl::PointCloud<pcl::SHOT352>::Ptr descriptors(new pcl::PointCloud<pcl::SHOT352>());
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //SHOT estimation object.
-//         pcl::SHOTEstimation<PointT, pcl::Normal, pcl::SHOT352>shot;
-//         shot.setInputCloud(cluster_cloud);
-//         shot.setInputNormals(normals);
-//         //The radius that defines which of the keypoint's neighbours are described.
-//         //If too large, there may be clutter, and if too small, not enough points may be found.
-//         shot.setRadiusSearch(0.02);
-//         shot.compute(*descriptors);
-//      }
-//  }
+/**
+ * @brief calcSHOT
+ * Function that calculates 3DSC (3D Shape Context)
+ * ~~Local Descriptor~~
+ */
+void calcSHOT()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+   //Object for storing the SHOT descriptors for each point.
+   pcl::PointCloud<pcl::SHOT352>::Ptr descriptors(new pcl::PointCloud<pcl::SHOT352>());
+   // Note: you would usually perform downsampling now. It has been omitted here
+   // for simplicity, but be aware that computation can take a long time.
+   //Estimate the normals.
+   normals=computeNormals(extractedClusters.at(i));
+   //SHOT estimation object.
+   pcl::SHOTEstimation<PointT, pcl::Normal, pcl::SHOT352>shot;
+   shot.setInputCloud(extractedClusters.at(i));
+   shot.setInputNormals(normals);
+   //The radius that defines which of the keypoint's neighbours are described.
+   //If too large, there may be clutter, and if too small, not enough points may be found.
+   shot.setRadiusSearch(0.02);
+     shot.compute(*descriptors);
+  }
+}
 
 
 //  void calcSI()
@@ -1033,12 +1015,13 @@ void calc3DSC()
     //calc3DSC();
     ///////////
 
+      //NOT TESTED-NOT WORKING
     //5.USC
     //calcUSC();
     /////////
 
     //6.SHOT
-    //calcSHOT();
+    calcSHOT();
     ////////
 
     //7.SI
