@@ -731,7 +731,7 @@ void calcSHOT()
 
 /**
  * @brief calcSI
- * Function that calculates SI (Spin image)
+ * Function that calculates SI (Spin Image)
  * ~~Local Descriptor~~
  */
 void calcSI()
@@ -760,85 +760,64 @@ void calcSI()
 }
 
 
-//  void calcRIFT()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
+/**
+ * @brief calcRIFT
+ * Function that calculates RIFT (Rotation-Invariant Feature Transform)
+ * ~~Local Descriptor~~
+ */
+void calcRIFT()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the point cloud with color information.
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudColor(new pcl::PointCloud<pcl::PointXYZRGB>);
+    //Object for storing the point cloud with intensity value.
+    pcl::PointCloud<pcl::PointXYZI>::Ptr cloudIntensity(new pcl::PointCloud<pcl::PointXYZI>);
+    //Object for storing the intensity gradients.
+    pcl::PointCloud<pcl::IntensityGradient>::Ptr gradients(new pcl::PointCloud<pcl::IntensityGradient>);
+    //Object for storing the RIFT descriptor for each point.
+    pcl::PointCloud<RIFT32>::Ptr descriptors(new pcl::PointCloud<RIFT32>());
+    // Note: you would usually perform downsampling now. It has been omitted here
+    // for simplicity, but be aware that computation can take a long time.
 
-//        //Object for storing the point cloud with color information.
-//        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudColor(new pcl::PointCloud<pcl::PointXYZRGB>);
-//        //Object for storing the point cloud with intensity value.
-//        pcl::PointCloud<pcl::PointXYZI>::Ptr cloudIntensity(new pcl::PointCloud<pcl::PointXYZI>);
-//        //Object for storing the intensity gradients.
-//        pcl::PointCloud<pcl::IntensityGradient>::Ptr gradients(new pcl::PointCloud<pcl::IntensityGradient>);
-//        //Object for storing the normals.
-//        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//        //Object for storing the RIFT descriptor for each point.
-//        pcl::PointCloud<RIFT32>::Ptr descriptors(new pcl::PointCloud<RIFT32>());
+    //need to save to PCD, and retrieve RGBXYZ ! (for data type consistency)
+    saveToPCD(cluster_cloud);
 
-//        // Note: you would usually perform downsampling now. It has been omitted here
-//        // for simplicity, but be aware that computation can take a long time.
+    // Read a PCD file from disk.
+    if (pcl::io::loadPCDFile<pcl::PointXYZRGB>("my_cluster.pcd", *cloudColor) != 0)
+    {
+        outInfo("ERROR!");
+    }
+    //Convert the RGB to intensity.
+    pcl::PointCloudXYZRGBtoXYZI(*cloudColor,*cloudIntensity);
 
-//        //need to save to PCD, and retrieve RGBXYZ ! (for data type consistency)
-//        saveToPCD(cluster_cloud);
+    //Estimate the normals.
+    normals=computeNormals(cloudIntensity);
 
-//        // Read a PCD file from disk.
-//        if (pcl::io::loadPCDFile<pcl::PointXYZRGB>("my_cluster.pcd", *cloudColor) != 0)
-//        {
-//            outInfo("ERROR!");
-//        }
-
-
-//        //Convert the RGB to intensity.
-//        pcl::PointCloudXYZRGBtoXYZI(*cloudColor,*cloudIntensity);
-
-//        //Estimate the normals.
-//        pcl::NormalEstimation<pcl::PointXYZI,pcl::Normal>normalEstimation;
-//        normalEstimation.setInputCloud(cloudIntensity);
-//        normalEstimation.setRadiusSearch(0.03);
-//        pcl::search::KdTree<pcl::PointXYZI>::Ptr kdtree(new pcl::search::KdTree<pcl::PointXYZI>);
-//        normalEstimation.setSearchMethod(kdtree);
-//        normalEstimation.compute(*normals);
-
-//        //compute the intensity gradients.
-//        pcl::IntensityGradientEstimation<pcl::PointXYZI,pcl::Normal,pcl::IntensityGradient,
-//                pcl::common::IntensityFieldAccessor<pcl::PointXYZI> >ge;
-//        ge.setInputCloud(cloudIntensity);
-//        ge.setInputNormals(normals);
-//        ge.setRadiusSearch(0.03);
-//        ge.compute(*gradients);
-
-//        //RIFT estimation object.
-//        pcl::RIFTEstimation<pcl::PointXYZI,pcl::IntensityGradient,RIFT32>rift;
-//        rift.setInputCloud(cloudIntensity);
-//        rift.setSearchMethod(kdtree);
-//        //Set the intensity gradients to use.
-//        rift.setInputGradient(gradients);
-//        //Radius, to get all the neighbours within.
-//        rift.setRadiusSearch(0.02);
-//        //Set the number of bins to use in the distance dimension.
-//        rift.setNrDistanceBins(4);
-//        //Set the number of bins to use in the gradient orientation dimension.
-//        rift.setNrGradientBins(8);
-//        //Note:you must change the output histogram size to reflect the previous values.
-
-//        rift.compute(*descriptors);
-
-//      }
-//  }
+    //compute the intensity gradients.
+    pcl::IntensityGradientEstimation<pcl::PointXYZI,pcl::Normal,pcl::IntensityGradient,
+            pcl::common::IntensityFieldAccessor<pcl::PointXYZI> >ge;
+    ge.setInputCloud(cloudIntensity);
+    ge.setInputNormals(normals);
+    ge.setRadiusSearch(0.03);
+    ge.compute(*gradients);
+    //RIFT estimation object.
+    pcl::RIFTEstimation<pcl::PointXYZI,pcl::IntensityGradient,RIFT32>rift;
+    rift.setInputCloud(cloudIntensity);
+    rift.setSearchMethod(kdtree);
+    //Set the intensity gradients to use.
+    rift.setInputGradient(gradients);
+    //Radius, to get all the neighbours within.
+    rift.setRadiusSearch(0.02);
+    //Set the number of bins to use in the distance dimension.
+    rift.setNrDistanceBins(4);
+    //Set the number of bins to use in the gradient orientation dimension.
+    rift.setNrGradientBins(8);
+    //Note:you must change the output histogram size to reflect the previous values.
+      rift.compute(*descriptors);
+  }
+}
 
 
 
@@ -1009,13 +988,12 @@ void calcSI()
     calcSI();
     ////////
 
-    //works
+      //TESTED-OK
     //8.RIFT
-    //calcRIFT();
+    calcRIFT();
     //////////
 
-    // I have some idea why it does not work :(
-    // I don't know how to fix it
+      //NOT TESTED-NOT WORKING
     //9.NARF
     //calcNARF();
     //////////
