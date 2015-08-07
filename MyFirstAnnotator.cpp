@@ -474,44 +474,23 @@ void calcGFPFH()
   }
 }
 
-//DOES NOT EXIST IN MY VERSION OF PCL
-//******* void calcGRSD()
-//******* {
-//*******     //iterate over clusters
-//*******     for(size_t i = 0; i < clusters.size(); ++i)
-//*******     {
-//*******        iai_rs::Cluster &cluster = clusters[i];
-//*******        if(!cluster.points.has())
-//*******        {
-//*******          continue;
-//*******        }
-//*******        pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//*******        iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//*******        pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//*******        pcl::ExtractIndices<PointT> ei;
-//*******        ei.setInputCloud(cloud_ptr);
-//*******        ei.setIndices(indices);
-//*******        ei.filter(*cluster_cloud);
-//*******
-//*******        //Object for storing the normals.
-//*******        pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//*******        //Object for storing the GRSD descriptors for each point.
-//*******        pcl::PointCloud<pcl::GRSDSignature21>::Ptr descriptors(new pcl::PointCloud<pcl::GRSDSignature21>());
-//*******
-//*******        //Estimate the normals.
-//*******        pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//*******        normalEstimation.setInputCloud(cluster_cloud);
-//*******        normalEstimation.setRadiusSearch(0.03);
-//*******        pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//*******        normalEstimation.setSearchMethod(kdtree);
-//*******        normalEstimation.compute(*normals);
-//*******
-//*******        //GRSD estimation object.
-//*******        //GRSDSignature21
-//*******        // GRSD estimation object.
-//*******            //GRSDEstimation<PointXYZ, Normal, GRSDSignature21> grsd;
-//      }
-//  }
+/**
+ * @brief calcGRSD
+ * NOT AVAILABLE GLOBAL DESCRIPTOR
+ */
+void calcGRSD()
+{
+    //iterate over clusters
+    extractedClusters=extractClusters();
+    for(int i = 0; i < extractedClusters.size(); ++i)
+    {
+    normals=computeNormals(extractedClusters.at(i));
+        //GRSD estimation object.
+        //GRSDSignature21
+        // GRSD estimation object.
+        //GRSDEstimation<PointXYZ, Normal, GRSDSignature21> grsd;
+    }
+}
 
 /**
  * @brief calcPFH
@@ -570,52 +549,29 @@ void calcFPFH()
 }
 
 
-// Sorry, can't try it out yet..
-//  //NO RSD, SORRY
-//  /**
-//   * @brief calcRSD
-//   * NOT INCLUDED IN CURRENT PCL VERSION
-//   */
-//  void calcRSD()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
 
+/**
+ * @brief calcRSD
+ * NOT INCLUDED IN CURRENT PCL VERSION
+ */
+void calcRSD()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the normals.
+    pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+    //Object for storing the RSD
 
-//         //Object for storing the normals.
-//         pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//         //Object for storing the RSD
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //Estimate the normals.
-//         pcl::NormalEstimation<PointT,pcl::Normal>normalEstimation;
-//         normalEstimation.setInputCloud(cluster_cloud);
-//         normalEstimation.setRadiusSearch(0.03);
-//         pcl::search::KdTree<PointT>::Ptr kdtree(new pcl::search::KdTree<PointT>);
-//         normalEstimation.setSearchMethod(kdtree);
-//         normalEstimation.compute(*normals);
-
-//         //RSD estimation object.
-//         //RSDEstimation<PointT,pcl::Normal,pcl::PrincipalRadiiRSD>rsd;
-//         //RSDE
-
-//      }
-//  }
+    // Note: you would usually perform downsampling now. It has been omitted here
+    // for simplicity, but be aware that computation can take a long time.
+    //Estimate the normals.
+    normals=computeNormals(extractedClusters.at(i));
+    //RSD estimation object.
+    //RSDEstimation<PointT,pcl::Normal,pcl::PrincipalRadiiRSD>rsd;
+    //RSDE........
+  }
+}
 
 
 /**
@@ -649,57 +605,38 @@ void calc3DSC()
   }
 }
 
+/**
+ * @brief calcUSC
+ * NOT WORKING LOCAL DESCRIPTOR
+ */
+void calcUSC()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Object for storing the USC descriptors for each point.
+    pcl::PointCloud<pcl::UniqueShapeContext1960>::Ptr descriptors(new pcl::PointCloud<pcl::UniqueShapeContext1960>());
 
-//SORRY, COULDN'T MAKE IT WORK
-//  /**
-//   * @brief calcUSC
-//   * NOT WORKIIIING
-//   */
-//  void calcUSC()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Object for storing the USC descriptors for each point.
-//         pcl::PointCloud<pcl::UniqueShapeContext1960>::Ptr descriptors(new pcl::PointCloud<pcl::UniqueShapeContext1960>());
-
-//         // Note: you would usually perform downsampling now. It has been omitted here
-//         // for simplicity, but be aware that computation can take a long time.
-
-//         //USC estimation object.
-
-//         //dice nu merrrrrrri?
-//         pcl::UniqueShapeContext<pcl::PointXYZ, pcl::UniqueShapeContext1960, pcl::ReferenceFrame> usc;
-
-//         //   usc.setInputCloud(cluster_cloud);
-//         //Search radius, to look for neighbours. It will also be the radius of the
-//         //support sphere.
-// //        usc.setRadiusSearch(0.05);
-//         //The minimal radius value for the search sphere, to avoid being too
-//         //sensitive in bins close to the center of the sphere.
-// //        usc.setRadiusSearch(0.05/10.0);
-//         //Radius used to compute the local point density for the neighbours
-//         //(the density is the number of points within that radius).
-//   //      usc.setPointDensityRadius(0.05/5.0);
-//         //Set the radius to compute the local Reference Frame.
-//   //      usc.setLocalRadius(0.05);
-
-//    //     usc.compute(*descriptors);
-//      }
-//  }
+    // Note: you would usually perform downsampling now. It has been omitted here
+    // for simplicity, but be aware that computation can take a long time.
+    //USC estimation object.
+    //dice nu merrrrrrri?
+    pcl::UniqueShapeContext<pcl::PointXYZ, pcl::UniqueShapeContext1960, pcl::ReferenceFrame> usc;
+    //usc.setInputCloud(extractedClusters.at(i));
+    //Search radius, to look for neighbours. It will also be the radius of the
+    //support sphere.
+    //usc.setRadiusSearch(0.05);
+    //The minimal radius value for the search sphere, to avoid being too
+    //sensitive in bins close to the center of the sphere.
+    //usc.setRadiusSearch(0.05/10.0);
+    //Radius used to compute the local point density for the neighbours
+    //(the density is the number of points within that radius).
+    //usc.setPointDensityRadius(0.05/5.0);
+    //Set the radius to compute the local Reference Frame.
+    //usc.setLocalRadius(0.05);
+    //usc.compute(*descriptors);
+  }
+}
 
 
 /**
@@ -776,13 +713,16 @@ void calcRIFT()
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloudIntensity(new pcl::PointCloud<pcl::PointXYZI>);
     //Object for storing the intensity gradients.
     pcl::PointCloud<pcl::IntensityGradient>::Ptr gradients(new pcl::PointCloud<pcl::IntensityGradient>);
+    //Object for storing the normals.
+    pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
     //Object for storing the RIFT descriptor for each point.
     pcl::PointCloud<RIFT32>::Ptr descriptors(new pcl::PointCloud<RIFT32>());
+
     // Note: you would usually perform downsampling now. It has been omitted here
     // for simplicity, but be aware that computation can take a long time.
 
     //need to save to PCD, and retrieve RGBXYZ ! (for data type consistency)
-    saveToPCD(cluster_cloud);
+    saveToPCD(extractedClusters.at(i));
 
     // Read a PCD file from disk.
     if (pcl::io::loadPCDFile<pcl::PointXYZRGB>("my_cluster.pcd", *cloudColor) != 0)
@@ -791,13 +731,16 @@ void calcRIFT()
     }
     //Convert the RGB to intensity.
     pcl::PointCloudXYZRGBtoXYZI(*cloudColor,*cloudIntensity);
-
     //Estimate the normals.
-    normals=computeNormals(cloudIntensity);
-
+    pcl::NormalEstimation<pcl::PointXYZI,pcl::Normal>normalEstimation;
+    normalEstimation.setInputCloud(cloudIntensity);
+    normalEstimation.setRadiusSearch(0.03);
+    pcl::search::KdTree<pcl::PointXYZI>::Ptr kdtree(new pcl::search::KdTree<pcl::PointXYZI>);
+    normalEstimation.setSearchMethod(kdtree);
+    normalEstimation.compute(*normals);
     //compute the intensity gradients.
     pcl::IntensityGradientEstimation<pcl::PointXYZI,pcl::Normal,pcl::IntensityGradient,
-            pcl::common::IntensityFieldAccessor<pcl::PointXYZI> >ge;
+    pcl::common::IntensityFieldAccessor<pcl::PointXYZI> >ge;
     ge.setInputCloud(cloudIntensity);
     ge.setInputNormals(normals);
     ge.setRadiusSearch(0.03);
@@ -819,76 +762,62 @@ void calcRIFT()
   }
 }
 
-
-
-//  void calcNARF()
-//  {
-//      //iterate over clusters
-//      for(size_t i = 0; i < clusters.size(); ++i)
-//      {
-//         iai_rs::Cluster &cluster = clusters[i];
-//         if(!cluster.points.has())
-//         {
-//           continue;
-//         }
-//         pcl::PointIndicesPtr indices(new pcl::PointIndices());
-//         iai_rs::conversion::from(((iai_rs::ReferenceClusterPoints)cluster.points.get()).indices.get(), *indices);
-//         pcl::PointCloud<PointT>::Ptr cluster_cloud(new pcl::PointCloud<PointT>());
-//         pcl::ExtractIndices<PointT> ei;
-//         ei.setInputCloud(cloud_ptr);
-//         ei.setIndices(indices);
-//         ei.filter(*cluster_cloud);
-
-//         //Parameters needed by the range image object:
-
-//         //Angular resolution if the angular distance between pixels.
-//         //Kinect:57 deg horiz FOV, 43 deg vert FOV 640x480(chosen here)
-//         //Xtion:58 deg horiz FOV, 45 deg vert FOV, 640x480.
-//         float angularResolutionX=(float)(57.0f/640.0f*(M_PI/180.0f));
-//         float angularResolutionY=(float)(43.0f/480.0f*(M_PI/180.0f));
-//         //Maximum horizontal and vertical angles. For example, for a null
-//         //panoramic scan, the first would be 360 deg. Chooseing values
-//         //that adjust to the real sensor will decrease the time it takes,
-//         //but don't worry. If the values are bigger than the real ones,
-//         //the image will be automatically cropped to discard empty zones.
-//         float maxAngleX=(float)(60.0f*(M_PI/180.0f));
-//         float maxAngleY=(float)(50.0f*(M_PI/180.0f));
-//         //Sensor pose. Thankfully, the cloud includes the data.
-//         Eigen::Affine3f sensorPose=Eigen::Affine3f(Eigen::Translation3f
-//                                    (
-//                                    cluster_cloud->sensor_origin_[0],
-//                                    cluster_cloud->sensor_origin_[1],
-//                                    cluster_cloud->sensor_origin_[2]
-//                                    ))   *
-//                 Eigen::Affine3f(cluster_cloud->sensor_orientation_);
-//         //Noise level. If greater than 0, values of neighbouring points
-//         //will be averaged. This would set the search radius(e.g., 0.03==3cm).
-//         float noiseLevel=0.0f;
-//         //Minimum range. If set, any point closer to the sensor than this will
-//         //be ignored.
-//         float minimumRange=0.0f;
-//         //Border size. If greater than 0, a border of "unobserved" points will be
-//         //left in the image when it is cropped.
-//         int borderSize=1;
-
-//         //Range image object.
-//         pcl::RangeImage rangeImage;
-//         rangeImage.createFromPointCloud(*cluster_cloud,
-//                    angularResolutionX,angularResolutionY,
-//                    maxAngleX, maxAngleY, sensorPose, pcl::RangeImage::CAMERA_FRAME,
-//                    noiseLevel, minimumRange, borderSize);
-
-//         //Visualize the image.
-//         pcl::visualization::RangeImageVisualizer viewer("Range image");
-//         viewer.showRangeImage(rangeImage);
-//         while(!viewer.wasStopped())
-//         {
-//             viewer.spinOnce();
-//             //Sleep 100ms to go easy on the CPU.
-//             pcl_sleep(0.1);
-//         }
-//      }
-//  }
+/**
+ * @brief calcNARF
+ * NOT WORKING LOCAL DESCRIPTOR
+ */
+void calcNARF()
+{
+  extractedClusters=extractClusters();
+  for(int i = 0; i < extractedClusters.size(); ++i)
+  {
+    //Parameters needed by the range image object:
+    //Angular resolution if the angular distance between pixels.
+    //Kinect:57 deg horiz FOV, 43 deg vert FOV 640x480(chosen here)
+    //Xtion:58 deg horiz FOV, 45 deg vert FOV, 640x480.
+    float angularResolutionX=(float)(57.0f/640.0f*(M_PI/180.0f));
+    float angularResolutionY=(float)(43.0f/480.0f*(M_PI/180.0f));
+    //Maximum horizontal and vertical angles. For example, for a null
+    //panoramic scan, the first would be 360 deg. Chooseing values
+    //that adjust to the real sensor will decrease the time it takes,
+    //but don't worry. If the values are bigger than the real ones,
+    //the image will be automatically cropped to discard empty zones.
+    float maxAngleX=(float)(60.0f*(M_PI/180.0f));
+    float maxAngleY=(float)(50.0f*(M_PI/180.0f));
+    //Sensor pose. Thankfully, the cloud includes the data.
+    Eigen::Affine3f sensorPose=Eigen::Affine3f(Eigen::Translation3f
+                               (
+                               extractedClusters.at(i)->sensor_origin_[0],
+                               extractedClusters.at(i)->sensor_origin_[1],
+                               extractedClusters.at(i)->sensor_origin_[2]
+                               ))   *
+            Eigen::Affine3f(extractedClusters.at(i)->sensor_orientation_);
+    //Noise level. If greater than 0, values of neighbouring points
+    //will be averaged. This would set the search radius(e.g., 0.03==3cm).
+    float noiseLevel=0.0f;
+    //Minimum range. If set, any point closer to the sensor than this will
+    //be ignored.
+    float minimumRange=0.0f;
+    //Border size. If greater than 0, a border of "unobserved" points will be
+    //left in the image when it is cropped.
+    int borderSize=1;
+    //Range image object.
+    pcl::RangeImage rangeImage;
+    rangeImage.createFromPointCloud(*extractedClusters.at(i),
+               angularResolutionX,angularResolutionY,
+               maxAngleX, maxAngleY, sensorPose, pcl::RangeImage::CAMERA_FRAME,
+               noiseLevel, minimumRange, borderSize);
+    //Visualize the image.
+    pcl::visualization::RangeImageVisualizer viewer("Range image");
+    viewer.showRangeImage(rangeImage);
+    while(!viewer.wasStopped())
+    {
+      viewer.spinOnce();
+      //Sleep 100ms to go easy on the CPU.
+      pcl_sleep(0.1);
+    }
+  }
+}
 
   TyErrorId processWithLock(CAS &tcas, ResultSpecification const &res_spec)
   {
@@ -985,7 +914,7 @@ void calcRIFT()
 
       //TESTED-OK
     //7.SI
-    calcSI();
+    //calcSI();
     ////////
 
       //TESTED-OK
@@ -1022,40 +951,12 @@ void calcRIFT()
     }
     else
     {
-     visualizer.updatePointCloud(cloud_ptr, "cloudname");
-     visualizer.getPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, pointSize, "cloudname");
-     visualizer.removeAllShapes();
+      visualizer.updatePointCloud(cloud_ptr, "cloudname");
+      visualizer.getPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, pointSize, "cloudname");
+      visualizer.removeAllShapes();
     }
   }
-
 };
 
 // This macro exports an entry point that is used to create the annotator.
 MAKE_AE(MyFirstAnnotator)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
